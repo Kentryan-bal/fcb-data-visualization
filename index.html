@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>X Trending Topics/Tags - Working Version</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        h1 {
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', 'Arial', sans-serif;
+            text-align: center;
+        }
+        
+        .chart-container {
+            position: relative; 
+            height: 500px; 
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .status-error {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .status-success {
+            background-color: #198754;
+            color: white;
+        }
+        
+        .status-warning {
+            background-color: #ffc107;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-dark p-5 min-vh-100">
+        <h1 class="text-light mb-4">Trending Topics as of <span id="date">Loading...</span></h1>
+        
+        <div id="status-container"></div>
+        
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart.js from CDNJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <script>
+        // Clear any previous errors
+        console.clear();
+        
+        // Status display function
+        function showStatus(message, type = 'success') {
+            const container = document.getElementById('status-container');
+            const statusClass = `status-${type}`;
+            container.innerHTML = `<div class="${statusClass} status-message">${message}</div>`;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Update date
+        try {
+            const dateElement = document.getElementById('date');
+            const currentDate = new Date();
+            dateElement.textContent = currentDate.toLocaleDateString('en-US', {
+                year: "numeric", 
+                month: "long", 
+                day: "numeric"
+            });
+            showStatus("✅ Page loaded successfully");
+        } catch (error) {
+            showStatus(`❌ Error updating date: ${error.message}`, 'error');
+        }
+
+        // Sample trending topics data (fallback)
+        const sampleData = [
+            { name: "Climate Summit 2025", volume: 245000 },
+            { name: "Tech Innovation", volume: 189000 },
+            { name: "Space Mission", volume: 156000 },
+            { name: "Olympics Updates", volume: 134000 },
+            { name: "Music Awards", volume: 112000 },
+            { name: "Movie Premiere", volume: 98000 },
+            { name: "Sports Finals", volume: 87000 },
+            { name: "Gaming News", volume: 76000 },
+            { name: "Health Tips", volume: 65000 },
+            { name: "Travel Deals", volume: 54000 }
+        ];
+
+        // Create chart function
+        function createTrendingChart(data, dataSource = 'API') {
+            try {
+                showStatus(`📊 Creating chart with ${data.length} trending topics from ${dataSource}`);
+                
+                const canvas = document.getElementById('myChart');
+                if (!canvas) {
+                    throw new Error("Canvas element not found");
+                }
+
+                // Extract data
+                const topics = data.map(item => item.name || 'Unknown Topic');
+                const volumes = data.map(item => parseInt(item.volume) || 0);
+
+                console.log('Chart Data:', { topics, volumes });
+
+                // Create gradient colors
+                const colors = [
+                    'rgba(255, 99, 132, 0.8)',   // Pink
+                    'rgba(54, 162, 235, 0.8)',   // Blue  
+                    'rgba(255, 205, 86, 0.8)',   // Yellow
+                    'rgba(75, 192, 192, 0.8)',   // Teal
+                    'rgba(153, 102, 255, 0.8)',  // Purple
+                    'rgba(255, 159, 64, 0.8)',   // Orange
+                    'rgba(199, 199, 199, 0.8)',  // Gray
+                    'rgba(83, 102, 255, 0.8)',   // Indigo
+                    'rgba(255, 99, 255, 0.8)',   // Magenta
+                    'rgba(99, 255, 132, 0.8)'    // Green
+                ];
+
+                const chart = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: topics,
+                        datasets: [{
+                            label: '# of Posts/Mentions',
+                            data: volumes,
+                            backgroundColor: colors.slice(0, topics.length),
+                            borderColor: colors.slice(0, topics.length).map(color => color.replace('0.8', '1')),
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', // Horizontal bar chart
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Trending Topics (Data from ${dataSource})`,
+                                color: 'white',
+                                font: { size: 16 }
+                            },
+                            legend: {
+                                labels: { color: 'white' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: 'white',
+                                    callback: function(value) {
+                                        return value >= 1000 ? (value/1000).toFixed(0) + 'K' : value;
+                                    }
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                title: {
+                                    display: true,
+                                    text: 'Volume (Posts/Mentions)',
+                                    color: 'white'
+                                }
+                            },
+                            y: {
+                                ticks: { 
+                                    color: 'white',
+                                    maxTicksLimit: 10
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+
+                showStatus(`✅ Chart created successfully with ${dataSource} data!`, 'success');
+                return chart;
+
+            } catch (error) {
+                showStatus(`❌ Failed to create chart: ${error.message}`, 'error');
+                console.error('Chart creation error:', error);
+                return null;
+            }
+        }
+
+        // Try API first, fallback to sample data
+        async function loadTrendingData() {
+            showStatus("🔄 Attempting to load trending data from API...", 'warning');
+            
+            // API configuration
+            const apiUrl = 'https://twitter-trends5.p.rapidapi.com/twitter/request.php';
+            const apiOptions = {
+                method: 'POST',
+                headers: {
+                    'x-rapidapi-key': '79e5c3e722msh633e635b7a9be5cp128750jsnc6eda5d339f7',
+                    'x-rapidapi-host': 'twitter-trends5.p.rapidapi.com',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({ woeid: "23424934" })
+            };
+
+            try {
+                const response = await fetch(apiUrl, apiOptions);
+                console.log(`API Response Status: ${response.status}`);
+
+                if (response.status === 429) {
+                    throw new Error("Rate limit exceeded. The API allows limited requests per day.");
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log('API Response:', result);
+
+                if (result && result.trends && Array.isArray(result.trends) && result.trends.length > 0) {
+                    const trends = result.trends.slice(0, 10);
+                    showStatus(`✅ Successfully loaded ${trends.length} trends from Twitter API`, 'success');
+                    createTrendingChart(trends, 'Twitter API');
+                } else {
+                    throw new Error("API returned invalid or empty data");
+                }
+
+            } catch (error) {
+                console.error('API Error:', error);
+                
+                if (error.message.includes('429') || error.message.includes('rate limit')) {
+                    showStatus("⚠️ API rate limit reached. Using sample data to demonstrate the chart.", 'warning');
+                } else {
+                    showStatus(`⚠️ API unavailable (${error.message}). Using sample data.`, 'warning');
+                }
+                
+                // Fallback to sample data
+                setTimeout(() => {
+                    createTrendingChart(sampleData, 'Sample Data');
+                }, 1000);
+            }
+        }
+
+        // Start the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTrendingData();
+        });
+
+    </script>
+</body>
+</html>
