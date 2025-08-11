@@ -2,3 +2,39 @@ h1{
 	font-family: 'Franklin Gothic Medium', 'Arial Narrow', 'Arial', sans-serif;
 	text-align: center ;
 }
+
+/* Fix the chart container sizing */
+#myChart {
+	max-width: 100%;
+	max-height: 70vh; /* 70% of viewport height */
+	width: 100%;
+	height: auto;
+}
+
+/* Ensure the main container doesn't overflow */
+.bg-dark {
+	overflow-x: hidden; /* Hide horizontal scrollbar */
+}
+
+/* Make sure the chart container is responsive */
+.chart-container {
+	position: relative;
+	height: 70vh; /* 70% of viewport height */
+	width: 100%;
+	max-width: 100%;
+}
+
+/* Optional: Add some padding adjustments for mobile */
+@media (max-width: 768px) {
+	.bg-dark {
+		padding: 2rem 1rem !important;
+	}
+	
+	h1 {
+		font-size: 1.5rem;
+	}
+	
+	#myChart {
+		max-height: 60vh;
+	}
+}
